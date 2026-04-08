@@ -5,7 +5,11 @@ import setuptools
 
 # Get version information without importing the package
 SHORT_DESCRIPTION = "Reverse Flutter"
-LONG_DESCRIPTION = open("README.md", "rt").read()
+try:
+    with open('README.md', 'r', encoding='utf-8') as f:
+        LONG_DESCRIPTION = f.read()
+except Exception:
+    LONG_DESCRIPTION = SHORT_DESCRIPTION
 
 CLASSIFIERS = [
     "Development Status :: 5 - Production/Stable",

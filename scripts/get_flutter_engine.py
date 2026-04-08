@@ -9,7 +9,7 @@ import string
 import sys
 
 from requests import get
-
+from reflutter import utils
 
 def usage():
     print("[-] Usage: python {} [libflutter.so]".format(sys.argv[0]))
@@ -21,10 +21,16 @@ if len(sys.argv) != 2:
 
 
 def is_hash_valid(string_hash: str) -> bool:
-    return (
-        get(f"https://github.com/flutter/flutter/commit/{string_hash}").status_code
-        == 200
-    )
+    
+    base_url="https://github.com/flutter/flutter/commit/" 
+
+    url_tmp= f"{base_url}{string_hash}"
+
+    url = utils.get_working_mirror(utils.GITHUB_MIRRORS, url_tmp)
+
+    print(f"is_hash_valid() Downloading url {url}") 
+
+    return (get(url).status_code== 200)
 
 
 file_name = sys.argv[1]

@@ -187,3 +187,15 @@ Flags:
 - `-e COMMIT`: engine commit hash
 
 ---
+
+
+# 安装包
+pip install .
+
+# 然后可以直接运行
+reflutter yangjibao_2.2.6.apk
+
+# 文件签名
+./uber-apk-signer.bat
+java -jar uber-apk-signer-1.2.1.jar --allowResign -a release.RE.apk
+

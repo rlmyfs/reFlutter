@@ -12,7 +12,10 @@ from requests import get
 import sys
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../reflutter")
-from utils import elff as ELFF
+
+from reflutter import utils
+
+from reflutter.utils import elff as ELFF
 
 release_url = (
     "https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json"
@@ -59,7 +62,13 @@ with open(log_file_path, "w") as f:
 if isdir(flutter_path):
     rmtree(flutter_path)
 
-cli(["git", "clone", "https://github.com/flutter/flutter.git", flutter_path])
+base_url="https://github.com/flutter/flutter.git" 
+        
+url = utils.get_working_mirror(utils.GITHUB_MIRRORS, base_url)
+
+print(f"gen_enginehash Downloading url {url}") 
+
+cli(["git", "clone", url, flutter_path])
 
 if isdir(flutter_path):
     for data in get(release_url).json()["releases"]:

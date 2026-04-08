@@ -9,15 +9,16 @@ try:
 except Exception:
     import utils
 
+import sys
 from urllib.request import urlretrieve
 from zipfile import ZipFile
 from os.path import join
 import zipfile
 
+
 # inits
 patch_dump = False
 build_engine = False
-
 
 def _patch_file(file_name: str):
     print("[*] Processing...")
@@ -77,10 +78,13 @@ def _patch_file(file_name: str):
 def _build_engine(libapp_hash: str):
     global patch_dump
     if not os.path.exists("enginehash.csv"):
-        urlretrieve(
-            "https://raw.githubusercontent.com/Impact-I/reFlutter/main/enginehash.csv",
-            "enginehash.csv",
-        )
+        base_url="https://raw.githubusercontent.com/Impact-I/reFlutter/main/enginehash.csv"
+
+        url =utils.get_working_mirror(utils.GITHUB_MIRRORS, base_url)
+
+        print(f"checkHash() Downloading url {url}") 
+
+        urlretrieve(url,"enginehash.csv",)
 
     with open("enginehash.csv") as f_obj:
         utils.replace_file_text(

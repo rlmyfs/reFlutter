@@ -1,0 +1,1 @@
+java -jar uber-apk-signer-1.2.1.jar --allowResign -a release.RE.apk

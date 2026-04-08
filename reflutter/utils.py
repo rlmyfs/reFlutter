@@ -3,13 +3,37 @@
 import os
 import shutil
 import sys
-from urllib.request import urlopen, urlretrieve
+
+if sys.version_info[0] >= 3:
+    from urllib.request import urlretrieve
+    from urllib.request import urlopen
+else:
+    from urllib import urlretrieve
+    from urllib import urlopen
+
 from os.path import join
 import zipfile
 import string
 import re
 
 OLD_SOCKET_PATCH_LAST_VERSION = 58
+
+GITHUB_MIRRORS = [
+    'https://gh-proxy.org',
+    'https://hk.gh-proxy.org',
+    'https://cdn.gh-proxy.org',
+    'https://edgeone.gh-proxy.org',
+]
+
+def get_working_mirror(mirrors, test_url):
+    for mirror in mirrors:
+        try:
+            test_full_url = f"{mirror}/{test_url}"
+            urlopen(test_full_url, timeout=3)
+            return test_full_url
+        except Exception as e:
+            continue
+    return test_url
 
 
 def replace_file_text(fname, textOrig, textReplace):
@@ -74,13 +98,15 @@ def check_libapp_hash(libapp_hash: str) -> int | None:
             "\nIs this really a Flutter app? \nThere was no libapp.so (Android) or App (iOS) found in the package.\n\n Make sure there is arm64-v8a/libapp.so or App.framework/App file in the package. If flutter library name differs you need to rename it properly before patching.\n"
         )
         sys.exit()
-    resp = (
-        urlopen(
-            "https://raw.githubusercontent.com/Impact-I/reFlutter/main/enginehash.csv"
-        )
-        .read()
-        .decode("utf-8")
-    )
+
+    base_url="https://raw.githubusercontent.com/Impact-I/reFlutter/main/enginehash.csv" 
+        
+    url = get_working_mirror(GITHUB_MIRRORS, base_url)
+
+    print(f"check_libapp_hash() Downloading url {url}") 
+
+    resp = (urlopen(url).read().decode("utf-8"))
+
     if libapp_hash not in resp:
         shutil.rmtree("libappTmp")
         print(
@@ -304,66 +330,66 @@ def get_network_lib(
     patch_dump: bool,
     burp_ip: str | None,
 ):
+    base_url="https://github.com/Impact-I/reFlutter/releases/download/"   
     verUrl = "v2-"
     if patch_dump:
         verUrl = "v3-"
     if len(libapp_ios[1]) != 0:
         try:
-            urlretrieve(
-                "https://github.com/Impact-I/reFlutter/releases/download/ios-"
-                + verUrl
-                + libapp_ios[1]
-                + "/Flutter",
-                "Flutter",
-            )
+            url_tmp= f"{base_url}/ios-{verUrl}{libapp_ios[1]}/Flutter" 
+         
+            url = get_working_mirror(GITHUB_MIRRORS, url_tmp) 
+
+            print(f"get_network_lib() Downloading url {url}") 
+
+            urlretrieve(url,"Flutter",)
         except Exception:
             libapp_ios = "", ""
             not_except("Flutter")
     if len(libapp_arm64[1]) != 0:
-        try:
-            urlretrieve(
-                "https://github.com/Impact-I/reFlutter/releases/download/android-"
-                + verUrl
-                + libapp_arm64[1]
-                + "/libflutter_arm64.so",
-                "libflutter_arm64.so",
-            )
+        try: 
+            url_tmp= f"{base_url}/android-{verUrl}{libapp_arm64[1]}/libflutter_arm64.so"
+
+            url = get_working_mirror(GITHUB_MIRRORS, url_tmp) 
+
+            print(f"get_network_lib() Downloading url {url}") 
+
+            urlretrieve(url,"libflutter_arm64.so",)
         except Exception:
             libapp_arm64 = "", ""
             not_except("libflutter_arm64.so")
     if len(libapp_arm[1]) != 0:
-        try:
-            urlretrieve(
-                "https://github.com/Impact-I/reFlutter/releases/download/android-"
-                + verUrl
-                + libapp_arm[1]
-                + "/libflutter_arm.so",
-                "libflutter_arm.so",
-            )
+        try: 
+            url_tmp= f"{base_url}/android-{verUrl}{libapp_arm[1]}/libflutter_arm.so"
+
+            url = get_working_mirror(GITHUB_MIRRORS, url_tmp) 
+
+            print(f"get_network_lib() Downloading url {url}") 
+
+            urlretrieve(url,"libflutter_arm.so",)
         except Exception:
             libapp_arm = "", ""
             not_except("libflutter_arm.so")
     if len(libapp_x64[1]) != 0:
-        try:
-            urlretrieve(
-                "https://github.com/Impact-I/reFlutter/releases/download/android-"
-                + verUrl
-                + libapp_x64[1]
-                + "/libflutter_x64.so",
-                "libflutter_x64.so",
-            )
+        try: 
+            url_tmp= f"{base_url}/android-{verUrl}{libapp_x64[1]}/libflutter_x64.so"
+
+            url = get_working_mirror(GITHUB_MIRRORS, url_tmp) 
+
+            print(f"get_network_lib() Downloading url {url}") 
+
+            urlretrieve(url,"libflutter_x64.so",)
         except Exception:
             libapp_x64 = "", ""
             not_except("libflutter_x64.so")
     if len(libapp_x86[1]) != 0:
-        try:
-            urlretrieve(
-                "https://github.com/Impact-I/reFlutter/releases/download/android-"
-                + verUrl
-                + libapp_x86[1]
-                + "/libflutter_x86.so",
-                "libflutter_x86.so",
-            )
+        try: 
+            url_tmp= f"{base_url}/android-{verUrl}{libapp_x86[1]}/libflutter_x86.so"
+
+            url = get_working_mirror(GITHUB_MIRRORS, url_tmp) 
+
+            print(f"get_network_lib() Downloading url {url}") 
+            urlretrieve(url,"libflutter_x86.so",)
         except Exception:
             libapp_x86 = "", ""
             not_except("libflutter_x86.so")
