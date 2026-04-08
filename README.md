@@ -1,33 +1,36 @@
+
+---
+
 [![stars](https://img.shields.io/github/stars/Impact-I/reFlutter)](https://github.com/Impact-I/reFlutter/stargazers)
 
 <p align="center"><img src="https://user-images.githubusercontent.com/87244850/135659542-22bb8496-bf26-4e25-b7c1-ffd8fc0cea10.png" width="75%"/></p>
 
-**Read more on the blog:** <https://swarm.ptsecurity.com/fork-bomb-for-flutter/>
+**更多内容请参见博客：** <https://swarm.ptsecurity.com/fork-bomb-for-flutter/>
 
-This framework helps with Flutter apps reverse engineering using the patched version of the Flutter library which is already compiled and ready for app repacking. This library has snapshot deserialization process modified to allow you perform dynamic analysis in a convenient way.
+这个框架用于帮助 Flutter 应用逆向工程，使用已经打补丁并准备好用于应用重新打包的 Flutter 库。该库修改了 snapshot 反序列化流程，以便你能够方便地进行动态分析。
 
-Key features:
+主要特性：
 
-- `socket.cc` is patched for traffic monitoring and interception;
-- `dart.cc` is modified to print classes, functions and some fields;
-- display absolute code offset for functions;
-- contains minor changes for successful compilation;
-- if you would like to implement your own patches, manual Flutter code changes are supported using a specially crafted `Dockerfile`.
+- `socket.cc` 打了补丁用于流量监控和拦截；
+- `dart.cc` 修改为打印类、函数和一些字段；
+- 显示函数的绝对代码偏移；
+- 包含一些成功编译所需的轻量修改；
+- 如果你想实现自己的补丁，支持使用专门制作的 Dockerfile 进行手动 Flutter 代码修改。
 
-### Supported engines
+### 支持的引擎
 
-- Android: arm64, arm32;
-- iOS: arm64;
+- Android: arm64, arm32；
+- iOS: arm64；
 - Release: Stable, Beta
 
-### Install
+### 安装
 
 ```
 # Linux, Windows, MacOS
 pip3 install reflutter==0.8.6
 ```
 
-### Usage
+### 用法
 
 ```console
 impact@f:~$ reflutter main.apk
@@ -41,50 +44,38 @@ Please sign the apk file
 impact@f:~$ reflutter main.ipa
 ```
 
-### Traffic interception
+### 流量拦截
 
-You need to specify the IP of your Burp Suite Proxy Server located in the same network where the device with the Flutter application is. Then configure the Proxy in `BurpSuite -> Listener Proxy -> Options tab`:
+你需要指定与运行 Flutter 应用设备处于同一网络中的 Burp Suite 代理服务器 IP。然后在 `BurpSuite -> Listener Proxy -> Options` 选项卡中配置代理：
 
-- Add port: `8083`
-- Bind to address: `All interfaces`
-- Request handling: Support invisible proxying = `True`
+- 添加端口：`8083`
+- 绑定地址：`All interfaces`
+- 请求处理：启用 invisible proxying = `True`
 
 <p align="center"><img src="https://user-images.githubusercontent.com/87244850/135753172-20489ef9-0759-432f-b2fa-220607e896b8.png" width="84%"/></p>
 
-No certificate installation or root access is required for Android. reFlutter also allows bypassing some of the Flutter certificate pinning implementations.
+无需安装证书或获取 root 权限即可在 Android 上使用。reFlutter 还支持绕过某些 Flutter 证书固定实现。
 
-> ⚠️ **Note:** Starting from Flutter version **3.24.0** (snapshot hash: `80a49c7111088100a233b2ae788e1f48`), the hardcoded proxy IP and port have been removed. You now need to configure your proxy directly on the device.
+> ⚠️ **注意：** 从 Flutter 版本 **3.24.0**（snapshot hash: `80a49c7111088100a233b2ae788e1f48`）开始，硬编码的代理 IP 和端口已被移除。你现在需要直接在设备上配置代理。
 
-#### On Android
+#### 在 Android 上
 
-Use ADB to configure the device’s proxy:
+使用 ADB 配置设备代理：
 
 ```bash
 adb -s <device> shell "settings put global http_proxy <proxy_ip:port>"
 ```
 
-Sign, align, and install the APK. Optionally configure **TunProxy** to route traffic through Burp Suite.
+对 APK 进行签名和对齐。建议使用工具 [uber-apk-signer](https://github.com/patrickfav/uber-apk-signer/releases/tag/v1.2.1)。
 
-#### On iOS
-
-Sign and install the IPA. Configure **Potatso** to use your Burp Suite proxy server.
-
-### Usage on Android
-
-The resulting apk must be aligned and signed. A recommended tool is [uber-apk-signer](https://github.com/patrickfav/uber-apk-signer/releases/tag/v1.2.1):
-
-```bash
-java -jar uber-apk-signer.jar --allowResign -a release.RE.apk
-```
-
-Run the app on a device. Determine `_kDartIsolateSnapshotInstructions` via binary search. reFlutter writes the dump file to the app's root folder and sets 777 permissions. Retrieve it using:
+运行应用程序。通过二分法确定 `_kDartIsolateSnapshotInstructions`。reFlutter 会将转储文件写入应用的根目录并设置 777 权限。使用以下命令取回：
 
 ```bash
 adb -d shell "cat /data/data/<PACKAGE_NAME>/dump.dart" > dump.dart
 ```
 
 <details>
-<summary>file contents</summary>
+<summary>文件内容</summary>
 
 ```dart
 Library:'package:anyapp/navigation/DeepLinkImpl.dart' Class: Navigation extends Object {
@@ -94,15 +85,15 @@ String* DeepUrl = anyapp://evil.com/ ;
 
 </details>
 
-### Usage on iOS
+### 在 iOS 上使用
 
-After running `reflutter main.ipa`, execute the app on device. The dump file path is printed to Xcode console logs:
+运行 `reflutter main.ipa` 后，在设备上执行应用。转储文件路径会打印到 Xcode 控制台日志中：
 
 ```
 Current working dir: /private/var/mobile/Containers/Data/Application/<UUID>/dump.dart
 ```
 
-Retrieve the file from the device.
+从设备取出该文件。
 
 <p align="center"><img src="https://user-images.githubusercontent.com/87244850/135860648-a13ba3fd-93d2-4eab-bd38-9aa775c3178f.png" width="100%"/></p>
 
@@ -113,31 +104,31 @@ frida-tools==13.7.1
 frida==16.7.19
 ```
 
-Use dump offsets in the Frida [script](https://github.com/Impact-I/reFlutter/blob/main/frida.js):
+在 Frida 脚本中使用转储偏移量：
 
 ```bash
 frida -U -f <package> -l frida.js
 ```
 
-To find `_kDartIsolateSnapshotInstructions`:
+要查找 `_kDartIsolateSnapshotInstructions`：
 
 ```bash
 readelf -Ws libapp.so
 ```
 
-Look for the `Value` field.
+查看 `Value` 字段。
 
-### To Do
+### 待办事项
 
-- [x] Display absolute code offset for functions;
-- [ ] Extract more strings and fields;
-- [x] Add socket patch;
-- [ ] Extend engine support to Debug using Fork and Github Actions;
-- [ ] Improve detection of `App.framework` and `libapp.so` inside zip archive
+- [x] 显示函数的绝对代码偏移；
+- [ ] 提取更多字符串和字段；
+- [x] 添加 socket 补丁；
+- [ ] 通过 Fork 和 Github Actions 扩展 Debug 引擎支持；
+- [ ] 改进对 zip 存档内 `App.framework` 和 `libapp.so` 的检测
 
-### Build Engine
+### 构建引擎
 
-Engines are built using [GitHub Actions](https://github.com/Impact-I/reFlutter/actions) based on data in [enginehash.csv](https://github.com/Impact-I/reFlutter/blob/main/enginehash.csv). Snapshot hash is retrieved from:
+引擎使用基于 enginehash.csv 中数据的 [GitHub Actions](https://github.com/Impact-I/reFlutter/actions) 构建。快照哈希从以下地址获取：
 
 ```
 https://storage.googleapis.com/flutter_infra_release/flutter/<hash>/android-arm64-release/linux-x64.zip
@@ -150,52 +141,50 @@ https://storage.googleapis.com/flutter_infra_release/flutter/<hash>/android-arm6
 
 </details>
 
-### Custom Build
+### 自定义构建
 
-Manual Flutter code patching is supported using Docker:
+手动 Flutter 代码补丁支持 Docker：
 
 ```bash
 git clone https://github.com/Impact-I/reFlutter && cd reFlutter
 docker build -t reflutter -f Dockerfile .
 ```
 
-Run with:
+运行：
 
 ```bash
 docker run -it -v "$(pwd):/t" -e HASH_PATCH=<Snapshot_Hash> -e COMMIT=<Engine_commit> reflutter
 ```
 
-Example:
+示例：
 
 ```bash
 docker run -it -v "$(pwd):/t" -e HASH_PATCH=aa64af18e7d086041ac127cc4bc50c5e -e COMMIT=d44b5a94c976fbb65815374f61ab5392a220b084 reflutter
 ```
 
-#### Example: Build Android ARM64 (Linux/Windows)
+#### 示例：构建 Android ARM64（Linux/Windows）
 
 ```bash
 docker run -e WAIT=300 -e x64=0 -e arm=0 -e HASH_PATCH=<Snapshot_Hash> -e COMMIT=<Engine_commit> --rm -iv${PWD}:/t reflutter
 ```
 
-Flags:
+参数：
 
-- `-e x64=0`: disables x64 build
-- `-e arm64=0`: disables arm64 build
-- `-e arm=0`: disables arm32 build
-- `-e WAIT=300`: time in seconds to modify source before build
-- `-e HASH_PATCH`: snapshot hash from `enginehash.csv`
-- `-e COMMIT`: engine commit hash
+- `-e x64=0`：禁用 x64 构建
+- `-e arm64=0`：禁用 arm64 构建
+- `-e arm=0`：禁用 arm32 构建
+- `-e WAIT=300`：修改源代码前等待的秒数
+- `-e HASH_PATCH`：来自 enginehash.csv 的快照哈希
+- `-e COMMIT`：引擎提交哈希
 
 ---
 
-
 # 安装包
-pip install .
+    pip install .
 
 # 然后可以直接运行
-reflutter yangjibao_2.2.6.apk
+    reflutter yangjibao_2.2.6.apk
 
 # 文件签名
-./uber-apk-signer.bat
-java -jar uber-apk-signer-1.2.1.jar --allowResign -a release.RE.apk
-
+    uber-apk-signer.bat
+    java -jar uber-apk-signer-1.2.1.jar --allowResign -a release.RE.apk
