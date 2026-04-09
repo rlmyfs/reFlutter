@@ -11,6 +11,7 @@ else:
     from urllib import urlretrieve
     from urllib import urlopen
 
+import socket
 from os.path import join
 import zipfile
 import string
@@ -24,6 +25,7 @@ GITHUB_MIRRORS = [
     'https://cdn.gh-proxy.org',
     'https://edgeone.gh-proxy.org',
 ]
+
 
 def get_working_mirror(mirrors, test_url):
     for mirror in mirrors:
@@ -39,7 +41,8 @@ def get_working_mirror(mirrors, test_url):
 def replace_file_text(fname, textOrig, textReplace):
     if fname[:15] == "src/third_party":  # fix for new flutter source path
         if not os.path.exists(fname):
-            new_third_party_path = "src/flutter/" + "/".join(fname.split("/")[1:])
+            new_third_party_path = "src/flutter/" + \
+                "/".join(fname.split("/")[1:])
             if os.path.exists(new_third_party_path):
                 fname = new_third_party_path
             else:
@@ -99,11 +102,11 @@ def check_libapp_hash(libapp_hash: str) -> int | None:
         )
         sys.exit()
 
-    base_url="https://raw.githubusercontent.com/Impact-I/reFlutter/main/enginehash.csv" 
-        
+    base_url = "https://raw.githubusercontent.com/Impact-I/reFlutter/main/enginehash.csv"
+
     url = get_working_mirror(GITHUB_MIRRORS, base_url)
 
-    print(f"check_libapp_hash() Downloading url {url}") 
+    print(f"check_libapp_hash() Downloading url {url}")
 
     resp = (urlopen(url).read().decode("utf-8"))
 
@@ -158,7 +161,8 @@ def convert_ip_fix(IPBurp: str):
     intoct.reverse()
     for i in intoct:
         if (
-            len(i) != 3 and int(i) > 7 and int(i) > 63 and len(".".join(intoct)) < 15
+            len(i) != 3 and int(i) > 7 and int(
+                i) > 63 and len(".".join(intoct)) < 15
         ):  # 64-99
             intoct[intoct.index(i)] = str(oct(int(i))).replace("o", "")
         elif len(i) != 3 and 7 < int(i) < 64 and len(".".join(intoct)) < 15:  # 8-63
@@ -172,7 +176,8 @@ def convert_ip_fix(IPBurp: str):
             elif len(i) < 3 and int(i) < 8 and len(".".join(intoct)) < 15:  # 0-7
                 intoct[intoct.index(i)] = intoct[intoct.index(i)].zfill(3)
         elif (
-            len(i) == 3 and int(i) > 7 and int(i) > 99 and len(".".join(intoct)) > 15
+            len(i) == 3 and int(i) > 7 and int(
+                i) > 99 and len(".".join(intoct)) > 15
         ):  # 64-99
             intoct[intoct.index(i)] = str(oct(int(i))).replace("o", "")
     for i in intoct:
@@ -181,7 +186,8 @@ def convert_ip_fix(IPBurp: str):
             if len(i) > 2 and int(i) > 7 and len(".".join(intoct)) > 15:  # 8-63
                 intoct[nn] = str(int(i, 8)).replace("o", "")
         elif (
-            len(i) != 3 and int(i) > 7 and int(i) > 63 and len(".".join(intoct)) < 15
+            len(i) != 3 and int(i) > 7 and int(
+                i) > 63 and len(".".join(intoct)) < 15
         ):  # 0-7
             intoct[nn] = str(oct(int(i))).replace("o", "")
     for i in intoct:
@@ -202,8 +208,35 @@ def convert_ip_fix(IPBurp: str):
     return ".".join(finallistIP)
 
 
+def get_local_ip() -> str:
+    """获取本机局域网IP地址"""
+    try:
+        # 创建一个UDP socket来连接外部地址，以获取本地IP
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # 不需要真正连接，只是用来获取本地IP
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+        s.close()
+        return local_ip
+    except Exception:
+        # 如果上述方法失败，尝试其他方法
+        try:
+            hostname = socket.gethostname()
+            local_ip = socket.gethostbyname(hostname)
+            if local_ip != "127.0.0.1":
+                return local_ip
+        except Exception:
+            pass
+        return "192.168.1.100"  # 默认返回值
+
+
 def input_burp_ip() -> str:
-    burp_ip = input("\nExample: (192.168.1.154) etc.\nPlease enter your BurpSuite IP: ")
+
+    local_ip = get_local_ip()
+    
+    burp_ip = input(
+        f"\nExample: ({local_ip}) etc.\nPlease enter your BurpSuite IP (press Enter to use detected IP): ")
+    
     if not re.match(r"[0-9]+(?:\.[0-9]+){3}", burp_ip):
         print("Invalid IP Address")
         input_burp_ip()
@@ -261,21 +294,24 @@ def replace_flutter_lib(
         try:
             shutil.move(
                 "libflutter_arm64.so",
-                join("release", libapp_arm64[0].replace("libapp.so", "libflutter.so")),
+                join("release", libapp_arm64[0].replace(
+                    "libapp.so", "libflutter.so")),
             )
         except Exception:
             pass
         try:
             shutil.move(
                 "libflutter_arm.so",
-                join("release", libapp_arm[0].replace("libapp.so", "libflutter.so")),
+                join("release", libapp_arm[0].replace(
+                    "libapp.so", "libflutter.so")),
             )
         except Exception:
             pass
         try:
             shutil.move(
                 "libflutter_x64.so",
-                join("release", libapp_x64[0].replace("libapp.so", "libflutter.so")),
+                join("release", libapp_x64[0].replace(
+                    "libapp.so", "libflutter.so")),
             )
         except Exception:
             pass
@@ -330,69 +366,75 @@ def get_network_lib(
     patch_dump: bool,
     burp_ip: str | None,
 ):
-    base_url="https://github.com/Impact-I/reFlutter/releases/download/"   
+    base_url = "https://github.com/Impact-I/reFlutter/releases/download/"
     verUrl = "v2-"
     if patch_dump:
         verUrl = "v3-"
     if len(libapp_ios[1]) != 0:
+        file_name = "Flutter"
         try:
-            url_tmp= f"{base_url}/ios-{verUrl}{libapp_ios[1]}/Flutter" 
-         
-            url = get_working_mirror(GITHUB_MIRRORS, url_tmp) 
+            url_tmp = f"{base_url}/ios-{verUrl}{libapp_ios[1]}/{file_name}"
 
-            print(f"get_network_lib() Downloading url {url}") 
+            url = get_working_mirror(GITHUB_MIRRORS, url_tmp)
 
-            urlretrieve(url,"Flutter",)
+            print(f"get_network_lib() Downloading url {url}")
+
+            urlretrieve(url, file_name,)
         except Exception:
             libapp_ios = "", ""
-            not_except("Flutter")
+            not_except(file_name)
     if len(libapp_arm64[1]) != 0:
-        try: 
-            url_tmp= f"{base_url}/android-{verUrl}{libapp_arm64[1]}/libflutter_arm64.so"
+        file_name = "libflutter_arm64.so"
+        try:
+            url_tmp = f"{base_url}/android-{verUrl}{libapp_arm64[1]}/{file_name}"
 
-            url = get_working_mirror(GITHUB_MIRRORS, url_tmp) 
+            url = get_working_mirror(GITHUB_MIRRORS, url_tmp)
 
-            print(f"get_network_lib() Downloading url {url}") 
+            print(f"get_network_lib() Downloading url {url}")
 
-            urlretrieve(url,"libflutter_arm64.so",)
+            urlretrieve(url, file_name,)
         except Exception:
             libapp_arm64 = "", ""
-            not_except("libflutter_arm64.so")
+            not_except(file_name)
     if len(libapp_arm[1]) != 0:
-        try: 
-            url_tmp= f"{base_url}/android-{verUrl}{libapp_arm[1]}/libflutter_arm.so"
+        file_name = "libflutter_arm.so"
+        try:
+            url_tmp = f"{base_url}/android-{verUrl}{libapp_arm[1]}/{file_name}"
 
-            url = get_working_mirror(GITHUB_MIRRORS, url_tmp) 
+            url = get_working_mirror(GITHUB_MIRRORS, url_tmp)
 
-            print(f"get_network_lib() Downloading url {url}") 
+            print(f"get_network_lib() Downloading url {url}")
 
-            urlretrieve(url,"libflutter_arm.so",)
+            urlretrieve(url, file_name,)
         except Exception:
             libapp_arm = "", ""
-            not_except("libflutter_arm.so")
+            not_except(file_name)
     if len(libapp_x64[1]) != 0:
-        try: 
-            url_tmp= f"{base_url}/android-{verUrl}{libapp_x64[1]}/libflutter_x64.so"
 
-            url = get_working_mirror(GITHUB_MIRRORS, url_tmp) 
+        file_name = "libflutter_x64.so"
+        try:
+            url_tmp = f"{base_url}/android-{verUrl}{libapp_x64[1]}/{file_name}"
 
-            print(f"get_network_lib() Downloading url {url}") 
+            url = get_working_mirror(GITHUB_MIRRORS, url_tmp)
 
-            urlretrieve(url,"libflutter_x64.so",)
+            print(f"get_network_lib() Downloading url {url}")
+
+            urlretrieve(url, {file_name},)
         except Exception:
             libapp_x64 = "", ""
-            not_except("libflutter_x64.so")
+            not_except(file_name)
     if len(libapp_x86[1]) != 0:
-        try: 
-            url_tmp= f"{base_url}/android-{verUrl}{libapp_x86[1]}/libflutter_x86.so"
+        file_name = "libflutter_x86.so"
+        try:
+            url_tmp = f"{base_url}/android-{verUrl}{libapp_x86[1]}/{file_name}"
 
-            url = get_working_mirror(GITHUB_MIRRORS, url_tmp) 
+            url = get_working_mirror(GITHUB_MIRRORS, url_tmp)
 
-            print(f"get_network_lib() Downloading url {url}") 
-            urlretrieve(url,"libflutter_x86.so",)
+            print(f"get_network_lib() Downloading url {url}")
+            urlretrieve(url, file_name,)
         except Exception:
             libapp_x86 = "", ""
-            not_except("libflutter_x86.so")
+            not_except(file_name)
 
     if burp_ip is not None:
         patch_library(

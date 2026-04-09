@@ -9,7 +9,6 @@ try:
 except Exception:
     import utils
 
-import sys
 from urllib.request import urlretrieve
 from zipfile import ZipFile
 from os.path import join
@@ -20,8 +19,9 @@ import zipfile
 patch_dump = False
 build_engine = False
 
+
 def _patch_file(file_name: str):
-    print("[*] Processing...")
+    print(f"[*] Processing {file_name}...")
     zip_stored = False
     libapp_arm64 = "", ""
     libapp_arm = "", ""
@@ -34,33 +34,36 @@ def _patch_file(file_name: str):
         list_of_file_names = zip_object.namelist()
         zip_object.extractall("release")
         for file_name in list_of_file_names:
-            if file_name.endswith("App.framework/App") or file_name.endswith(
-                "FlutterApp.framework/FlutterApp"
-            ):
+            if file_name.endswith("App.framework/App") or file_name.endswith("FlutterApp.framework/FlutterApp"):
                 zip_object.extract(file_name, "libappTmp")
-                libapp_ios = file_name, utils.elff(join("libappTmp", file_name))
+                libapp_ios = file_name, utils.elff(
+                    join("libappTmp", file_name))
                 libapp_hash = libapp_ios[1]
             if file_name.endswith("v8a/libapp.so"):
                 if zip_object.getinfo(file_name).compress_type == zipfile.ZIP_STORED:
                     zip_stored = True
                 zip_object.extract(file_name, "libappTmp")
-                libapp_arm64 = file_name, utils.elff(join("libappTmp", file_name))
+                libapp_arm64 = file_name, utils.elff(
+                    join("libappTmp", file_name))
                 libapp_hash = libapp_arm64[1]
             if file_name.endswith("v7a/libapp.so"):
                 if zip_object.getinfo(file_name).compress_type == zipfile.ZIP_STORED:
                     zip_stored = True
                 zip_object.extract(file_name, "libappTmp")
-                libapp_arm = file_name, utils.elff(join("libappTmp", file_name))
+                libapp_arm = file_name, utils.elff(
+                    join("libappTmp", file_name))
                 libapp_hash = libapp_arm[1]
             if file_name.endswith("64/libapp.so"):
                 if zip_object.getinfo(file_name).compress_type == zipfile.ZIP_STORED:
                     zip_stored = True
                 zip_object.extract(file_name, "libappTmp")
-                libapp_x64 = file_name, utils.elff(join("libappTmp", file_name))
+                libapp_x64 = file_name, utils.elff(
+                    join("libappTmp", file_name))
                 libapp_hash = libapp_arm[1]
             if file_name.endswith("86/libflutter.so"):
                 zip_object.extract(file_name, "libappTmp")
-                libapp_x86 = file_name, utils.elff(join("libappTmp", file_name))
+                libapp_x86 = file_name, utils.elff(
+                    join("libappTmp", file_name))
                 libapp_hash = libapp_arm[1]
         zip_object.close()
         utils.replace_flutter_lib(
@@ -78,13 +81,13 @@ def _patch_file(file_name: str):
 def _build_engine(libapp_hash: str):
     global patch_dump
     if not os.path.exists("enginehash.csv"):
-        base_url="https://raw.githubusercontent.com/Impact-I/reFlutter/main/enginehash.csv"
+        base_url = "https://raw.githubusercontent.com/Impact-I/reFlutter/main/enginehash.csv"
 
-        url =utils.get_working_mirror(utils.GITHUB_MIRRORS, base_url)
+        url = utils.get_working_mirror(utils.GITHUB_MIRRORS, base_url)
 
-        print(f"checkHash() Downloading url {url}") 
+        print(f"checkHash() Downloading url {url}")
 
-        urlretrieve(url,"enginehash.csv",)
+        urlretrieve(url, "enginehash.csv",)
 
     with open("enginehash.csv") as f_obj:
         utils.replace_file_text(
